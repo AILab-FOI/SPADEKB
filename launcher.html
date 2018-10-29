@@ -1,0 +1,259 @@
+{% extends "internal_tpl_base.html" %}
+
+{% block content_title %}Launcher{% endblock %}
+{% block content %}
+
+<!-- Main content -->
+<section class="content">
+    <!-- Info boxes -->
+    <!-- Main row -->
+    <div class="row">
+
+        <div class="col-md-6">
+
+            <form role="form" method="post" action="/submit" enctype="multipart/form-data">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Select graph input file: </h3>
+                    </div>
+                    <!-- /.box-header -->
+                    <!-- form start -->
+                    <div class="box-body">
+                        <div class="form-group">
+                            <label>Select Graph Format File:</label>
+                            <div class="form-group">
+                              <div class="radio">
+                                <label>
+                                  <input type="radio" name="graphFileType" id="graphFileType" value="pajek">
+                                  Pajek
+                                </label>
+                              </div>
+                              <div class="radio">
+                                <label>
+                                  <input type="radio" name="graphFileType" id="graphFileType" value="graphml" checked>
+                                  GraphML
+                                </label>
+                              </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="graphInputFile">File input</label>
+                                <input type="file" name="graphInputFile" id="graphInputFile">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Select Consensus Algorithm: </h3>
+                    </div>
+                    <!-- /.box-header -->
+                    <!-- form start -->
+                    <div class="box-body">
+                        <div class="form-group">
+                            <div class="input-group">
+                                <div class="input-group-btn">
+                                    <button type="button" class="btn btn-danger">OWL's Ontology URI</button>
+                                </div>
+                                <input type="text" class="form-control" name="OWLURI" id="OWLURI" value="http://www.dsic.upv.es/%7ecarrasco/MAMbO5.owl">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- /.box-body -->
+
+                </div>
+                <div class="box-footer">
+                    <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-play"></span> Submit</button>
+                    <button type="submit" class="btn btn-danger" id="stopMAS" value="True"><span class="glyphicon glyphicon-stop"></span> Stop MAS Execution</button>
+                </div>
+            </form>
+
+        </div>
+
+        <div class="col-md-6">
+
+            <form id="graphForm" role="form" method="post" action="/submit_graph" enctype="multipart/form-data">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Generating GraphML file: </h3>
+                    </div>
+                    <!-- /.box-header -->
+                    <!-- form start -->
+                    <div class="box-body">
+                        <h4>GraphML file name to save the new graph into:</h4>
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="graphOutputFile" id="graphOutputFile" value="example">
+                            <span class="input-group-addon">.gml</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">Select Graph Features: </h3>
+                    </div>
+                    <!-- /.box-header -->
+                    <!-- form start -->
+                    <div class="box-body">
+                        <div class="form-group">
+                            <label>Available Graph Generators:</label>
+                            <select class="form-control" name="graphGenerator" id="graphGenerator" onchange="myHide(this)">
+                                <option value="complete" selected="selected">Complete</option>
+                                <option value="path">Path</option>
+                                <option value="cycle">Cycle</option>
+                                <option value="wheel">Wheel</option>
+                                <option value="star" >Star</option>
+                                <option value="random">Erdos - Reny (Random)</option>
+                                <option value="watts">Watts - Strogatz</option>
+                                <option value="barabasi">Barabasi - Albert</option>
+                                <option value="geometric">Random Geometric</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <div class="input-group">
+                                <div class="input-group-btn">
+                                    <button type="button" class="btn btn-danger">Nodes number</button>
+                                </div>
+                                <input type="text" class="form-control" name="nodesNumber" id="nodesNumber" value="10">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="input-group">
+                                <div class="input-group-btn">
+                                    <button type="button" class="btn btn-danger">Value range size</button>
+                                </div>
+                                <input type="text" class="form-control" name="rangeSize" id="rangeSize" value="1">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Initial value centered in range:</label>
+                            <div class="form-group">
+                              <div class="radio">
+                                <label>
+                                  <input type="radio" name="initialCentered" id="initialCentered" value="yes">
+                                  Yes
+                                </label>
+                              </div>
+                              <div class="radio">
+                                <label>
+                                  <input type="radio" name="initialCentered" id="initialCentered" value="random" checked>
+                                  Random
+                                </label>
+                              </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Nodes Weight: A random value in [0, 1]</label>
+                            <div class="form-group">
+                              <div class="radio">
+                                <label>
+                                  <input type="radio" name="nodeWeight" id="nodeWeight" value="same">
+                                  The same for all nodes
+                                </label>
+                              </div>
+                              <div class="radio">
+                                <label>
+                                  <input type="radio" name="nodeWeight" id="nodeWeight" value="different" checked>
+                                  Each node has a different value
+                                </label>
+                              </div>
+                            </div>
+                        </div>
+                        <div class="form-group" style="display: none" id="prob-group">
+                            <div class="input-group">
+                                <div class="input-group-btn">
+                                    <button type="button" class="btn btn-danger" onclick="myFunction()">Probability</button>
+                                </div>
+                                <input type="text" class="form-control" name="probability" id="probability"
+                                       value="log(<Nodes Number>)/<Nodes Number>">
+                            </div>
+                        </div>
+                        <div class="form-group" style="display: none" id="neigh-group">
+                            <div class="input-group">
+                                <div class="input-group-btn">
+                                    <button type="button" class="btn btn-danger">Neighbours' Distance</button>
+                                </div>
+                                <input type="text" class="form-control" name="neighDist" id="neighDist" value="2">
+                            </div>
+                        </div>
+                        <div class="form-group" style="display: none" id="edgesNew-group">
+                            <div class="input-group">
+                                <div class="input-group-btn">
+                                    <button type="button" class="btn btn-danger">Edges to attach to a new node</button>
+                                </div>
+                                <input type="text" class="form-control" name="edgesNew" id="edgesNew" value="2">
+                            </div>
+                        </div>
+                        <div class="form-group" style="display: none" id="radius-group">
+                            <div class="input-group">
+                                <div class="input-group-btn">
+                                    <button type="button" class="btn btn-danger">Radius distance threshold value</button>
+                                </div>
+                                <input type="text" class="form-control" name="radius" id="radius" value="0.5">
+                            </div>
+                        </div>
+                    <!-- /.box-body -->
+
+                </div>
+                <div class="box-footer">
+                    <button type="submit" class="btn btn-primary">Generate File</button>
+                </div>
+            </form>
+
+        </div>
+
+    </div>
+
+    <script>
+function myShowIter(selectObject){
+    var generator = selectObject.value;
+    var i;
+
+    //console.log(generator);
+
+    if (generator == "ICORa")
+            document.getElementById('ICORa_delta_iter').style.display = "block";
+        else document.getElementById('ICORa_delta_iter').style.display = "none";
+
+}
+
+function myHide(selectObject){
+    var generator = selectObject.value;
+    var i;
+
+    //console.log(generator);
+
+    if (generator == "random" || generator == "watts") {
+        if (generator == "watts")
+            document.getElementById('neigh-group').style.display = "block";
+        else document.getElementById('neigh-group').style.display = "none";
+
+        document.getElementById('prob-group').style.display = "block";
+        i = document.getElementById('nodesNumber').value ;
+        document.getElementById('probability').value = Math.log(i) / i;
+    }
+    else {
+        document.getElementById('neigh-group').style.display = "none";
+        document.getElementById('prob-group').style.display = "none";
+    }
+
+    if (generator == "barabasi")
+        document.getElementById('edgesNew-group').style.display = "block";
+    else document.getElementById('edgesNew-group').style.display = "none";
+
+    if (generator == "geometric")
+        document.getElementById('radius-group').style.display = "block";
+    else document.getElementById('radius-group').style.display = "none";
+}
+
+function myFunction() {
+    var i;
+    i = document.getElementById('nodesNumber').value ;
+
+    document.getElementById('probability').value = Math.log(i) / i;
+}
+    </script>
+
+</section>
+{% endblock content %}
