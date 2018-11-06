@@ -4,6 +4,7 @@ import math
 import names # random name generator
 
 import numpy as np
+import onto2nx
 
 from aiohttp import web
 
@@ -40,9 +41,10 @@ class LauncherAgent(SpadeOWLAbstractAgent):
             nxGraph = nx.read_graphml(graph_data.file)
 
         self.subgraph = nxGraph
+        self.bel_graph = onto2nx.parse_owl_rdf(onto_uri)
 
         # Calculate the number of nodes in the graph
-        nodes_list = nxGraph.nodes
+        nodes_list = list(nxGraph.nodes(data=True))
 
         # Calculate epsilon
         # degree_sequence = [d for n, d in nxGraph.degree()]
@@ -55,7 +57,7 @@ class LauncherAgent(SpadeOWLAbstractAgent):
         self.add_behaviour(RecvBehav(), template)
         self.add_behaviour(self.ConsensusObserver())
 
-        for key, node in nodes_list.items():
+        for key, node in nodes_list:
             # Create an agent
             if 'id' not in node:
                 node['id'] = node['name']
@@ -71,7 +73,7 @@ class LauncherAgent(SpadeOWLAbstractAgent):
             self.mas_dict[jid1] = node_agent
             base_port = 30000
             url = node_agent.url + str(base_port + i) + "/agent"
-            nxGraph.nodes[key].update(url=url)
+            nxGraph.node[key]['url'] = url
 
             neighList = list(nxGraph.neighbors(key))
             neighList.append(key)

@@ -20,6 +20,7 @@ from spade.behaviour import CyclicBehaviour
 import spade_bokeh as spBokeh
 
 import owlready2 as owl
+import onto2nx as onto2nx
 
 
 class SpadeOWLAbstractAgent(spBokeh.BokehServerMixin, Agent, metaclass=ABCMeta):
@@ -42,15 +43,22 @@ class SpadeOWLAbstractAgent(spBokeh.BokehServerMixin, Agent, metaclass=ABCMeta):
         if onto_uri != None:
             self.onto = owl.get_ontology(onto_uri).load()
             print("Ontology: ", onto_uri)
-            self.bel_graph = nx.Graph()
-            self.bel_graph.add_nodes_from(list(self.onto.classes()))
+            # self.bel_graph = nx.Graph()
+
+            self.bel_graph = onto2nx.parse_owl_rdf(onto_uri)
+
+            # for node in self.onto.classes():
+            #    self.bel_graph.add_node(node)
+
+
+            # self.bel_graph.add_nodes_from(list(self.onto.classes()))
             print("Belief graph created from: ", list(self.onto.classes()))
             print("Node: ", self.bel_graph.nodes())
 
         self.avail_mutex = aioLock()
 
     async def get_neighbours(self):
-        for key, node in self.subgraph.nodes.items():
+        for key, node in list(self.subgraph.nodes(data=True)):
             jid1 = node['id'].lower() + self.jid_domain
             if jid1 != str(self.jid):
                 yield jid1
@@ -84,16 +92,17 @@ class SpadeOWLAbstractAgent(spBokeh.BokehServerMixin, Agent, metaclass=ABCMeta):
         return {"graphBokeh": bokehGraph, "beliefBokeh": beliefs}
 
     def plot_create(self, doc):
-         plot = figure(title="Belief Graph")
+         plot = figure(x_range=(-1.1, 1.1), y_range=(-1.1, 1.1), title="Belief Graph")
          plot.axis.visible = False
 
-         node_labels = nx.get_node_attributes(self.bel_graph, 'id')
-         node_labels = tuple([label for label in node_labels.values()])
+         # node_labels = nx.get_node_attributes(self.bel_graph, 'id')
+         # node_labels = tuple([label for label in node_labels.values()])
+         node_labels = list(self.bel_graph.node.keys())
 
          ncolor = ['#2b83ba' for name in node_labels]
-         nsize = [15 for name in node_labels]
+         nsize = [10 for name in node_labels]
 
-         graph = from_networkx(self.bel_graph, nx.spring_layout, scale=1, center=(0, 0))
+         graph = from_networkx(self.bel_graph, nx.shell_layout, scale=1, center=(0, 0))
 
          graph.node_renderer.glyph = Circle(size='nsize', fill_color='ncolor')
          graph.node_renderer.selection_glyph = Circle(size='nsize', fill_color='#054872')
@@ -102,9 +111,9 @@ class SpadeOWLAbstractAgent(spBokeh.BokehServerMixin, Agent, metaclass=ABCMeta):
 
          graph.node_renderer.data_source.data.update(dict(id=node_labels, ncolor=ncolor, nsize=nsize))
 
-         graph.edge_renderer.glyph = MultiLine(line_color="#CCCCCC", line_alpha=0.8, line_width=5)
-         graph.edge_renderer.selection_glyph = MultiLine(line_color='#054872', line_width=5)
-         graph.edge_renderer.hover_glyph = MultiLine(line_color='#abdda4', line_width=5)
+         graph.edge_renderer.glyph = MultiLine(line_color="#CCCCCC", line_alpha=0.8, line_width=2)
+         graph.edge_renderer.selection_glyph = MultiLine(line_color='#054872', line_width=2)
+         graph.edge_renderer.hover_glyph = MultiLine(line_color='#abdda4', line_width=2)
 
          graph.selection_policy = NodesAndLinkedEdges()
          # graph.inspection_policy = EdgesAndLinkedNodes()
@@ -203,8 +212,8 @@ class SpadeOWLAbstractAgent(spBokeh.BokehServerMixin, Agent, metaclass=ABCMeta):
         super().stop()
 
     def plots_to_add(self):
-        self.bokeh_server.add_plot("/bkbel", self.plot_create)
         self.bokeh_server.add_plot("/bkappgraph", self.plot_create_graph)
+        self.bokeh_server.add_plot("/bkbel", self.plot_create)
 
     def setup(self):
         # print("Agent {} running".format(self.name))
