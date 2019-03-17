@@ -71,7 +71,7 @@ class xsb:
         self.engine.sendline("['" + module + "'].")
         index = self.engine.expect([xsbprompt, xsberror])
         if index == 1:
-            raise XSBCompileError('Error while compiling module "' + module + '". Error from XSB:\n' + self.engine.after)
+            raise XSBCompileError('Error while compiling module "' + module + '". Error from XSB:\n' + str( self.engine.after ))
 
     def query(self, query):
         '''Queries current engine state
@@ -96,7 +96,7 @@ class xsb:
             self.engine.sendline(query)
             index = self.engine.expect([xsbprompt, xsberror])
             if index == 1:
-                raise XSBQueryError('Error while executing query "' + query + '". Error from XSB:\n' + self.engine.after)
+                raise XSBQueryError('Error while executing query "' + query + '". Error from XSB:\n' + str( self.engine.after ))
             else:
                 if 'yes' in str( self.engine.before ):
                     return True
@@ -107,9 +107,11 @@ class xsb:
             self.engine.sendline(printer)
             index = self.engine.expect([xsberror, xsbprompt])
             if index == 0:
-                raise XSBQueryError('Error while executing query "' + query + '". Error from XSB:\n' + self.engine.after)
+                raise XSBQueryError('Error while executing query "' + query + '". Error from XSB:\n' + str( self.engine.after ))
             else:
-                res = res_re.findall(str( self.engine.before ).split(',nl,fail.\n')[-1])
+                state = str( self.engine.before )
+                state = state.replace( '\\r', '\r' ).replace( '\\n', '\n' )
+                res = res_re.findall( state.split(',nl,fail.\n')[-1])
                 results = []
                 counter = 0
                 temp = []
@@ -181,7 +183,7 @@ class swipl:
         self.engine.sendline("['" + module + "'].")
         index = self.engine.expect([swierror, swiprompt])
         if index == 0:
-            raise SWICompileError('Error while compiling module "' + module + '". Error from SWI:\n' + self.engine.after)
+            raise SWICompileError('Error while compiling module "' + module + '". Error from SWI:\n' + str( self.engine.after ))
 
     def query(self, query):
         '''Queries current engine state
@@ -206,7 +208,7 @@ class swipl:
             self.engine.sendline(query)
             index = self.engine.expect([swiprompt, swierror])
             if index == 1:
-                raise SWIQueryError('Error while executing query "' + query + '". Error from SWI:\n' + self.engine.after)
+                raise SWIQueryError('Error while executing query "' + query + '". Error from SWI:\n' + str( self.engine.after ))
             else:
                 if 'true' in str( self.engine.before ):
                     return True
@@ -217,9 +219,11 @@ class swipl:
             self.engine.sendline(printer)
             index = self.engine.expect([swierror, swiprompt])
             if index == 0:
-                raise SWIQueryError('Error while executing query "' + query + '". Error from SWI:\n' + self.engine.after)
+                raise SWIQueryError('Error while executing query "' + query + '". Error from SWI:\n' + str( self.engine.after ))
             else:
-                res = res_re.findall(str( self.engine.before ).split(',nl,fail.\n')[-1])
+                state = str( self.engine.before )
+                state = state.replace( '\\r', '\r' ).replace( '\\n', '\n' )
+                res = res_re.findall( state.split(',nl,fail.\n')[-1])
                 results = []
                 counter = 0
                 temp = []
@@ -291,7 +295,7 @@ class eclipse:
         self.engine.sendline("['" + module + "'].")
         index = self.engine.expect([eclipseerror, eclipseprompt])
         if index == 0:
-            raise ECLiPSeCompileError('Error while compiling module "' + module + '". Error from ECLiPSe:\n' + self.engine.after)
+            raise ECLiPSeCompileError('Error while compiling module "' + module + '". Error from ECLiPSe:\n' + str( self.engine.after ))
 
     def query(self, query):
         '''Queries current engine state
@@ -316,7 +320,7 @@ class eclipse:
             self.engine.sendline(query)
             index = self.engine.expect([eclipseprompt, eclipseerror])
             if index == 1:
-                raise ECLiPSeQueryError('Error while executing query "' + query + '". Error from ECLiPSe:\n' + self.engine.after)
+                raise ECLiPSeQueryError('Error while executing query "' + query + '". Error from ECLiPSe:\n' + str( self.engine.after ))
             else:
                 if 'Yes' in str( self.engine.before ):
                     return True
@@ -327,9 +331,11 @@ class eclipse:
             self.engine.sendline(printer)
             index = self.engine.expect([eclipseerror, eclipseprompt])
             if index == 0:
-                raise ECLiPSeQueryError('Error while executing query "' + query + '". Error from ECLiPSe:\n' + self.engine.after)
+                raise ECLiPSeQueryError('Error while executing query "' + query + '". Error from ECLiPSe:\n' + str( self.engine.after ))
             else:
-                res = res_re.findall(str( self.engine.before ).split(',nl,fail.\n')[-1])
+                state = str( self.engine.before )
+                state = state.replace( '\\r', '\r' ).replace( '\\n', '\n' )
+                res = res_re.findall( state.split(',nl,fail.\n')[-1])
                 results = []
                 counter = 0
                 temp = []
@@ -360,7 +366,7 @@ flora2prompt = 'flora2 [?][-][ ]'
 flora2error = '[+][+]Error.*'
 
 fvar_re = re.compile('[?][a-zA-Z0-9][a-zA-Z0-9_]*')
-fres_re = re.compile("[?]([a-zA-Z0-9_]*) [=] ([^\r]+)")
+fres_re = re.compile('[?]([a-zA-Z0-9_]+) [=] ([^\r]+)')
 
 
 class Flora2ExecutableNotFound(Exception):
@@ -392,7 +398,6 @@ class flora2:
         try:
             self.engine = px.spawn(path + ' ' + args, timeout=5)
             self.engine.expect(flora2prompt)
-            self.engine.expect(flora2prompt)
         except px.ExceptionPexpect:
             raise Flora2ExecutableNotFound('Flora-2 executable not found on the specified path. Try using flora2( "/path/to/flora2/runflora" )')
 
@@ -405,7 +410,7 @@ class flora2:
         self.engine.sendline("['" + module + "'].")
         index = self.engine.expect([flora2prompt, flora2error])
         if index == 1:
-            raise Flora2CompileError('Error while compiling module "' + module + '". Error from Flora2:\n' + self.engine.after)
+            raise Flora2CompileError('Error while compiling module "' + module + '". Error from Flora2:\n' + str( self.engine.after ))
 
     def query(self, query):
         '''Queries current engine state
@@ -430,7 +435,7 @@ class flora2:
             self.engine.sendline(query)
             index = self.engine.expect([flora2prompt, flora2error])
             if index == 1:
-                raise Flora2QueryError('Error while executing query "' + query + '". Error from Flora2:\n' + self.engine.after)
+                raise Flora2QueryError('Error while executing query "' + query + '". Error from Flora2:\n' + str( self.engine.after ))
             else:
                 if 'Yes' in str( self.engine.before ):
                     return True
@@ -440,9 +445,11 @@ class flora2:
             self.engine.sendline(query)
             index = self.engine.expect([flora2error, flora2prompt])
             if index == 0:
-                raise Flora2QueryError('Error while executing query "' + query + '". Error from Flora2:\n' + self.engine.after)
+                raise Flora2QueryError('Error while executing query "' + query + '". Error from Flora2:\n' + str( self.engine.after ))
             else:
-                res = fres_re.findall(str( self.engine.before ))
+                state = str( self.engine.before )
+                state = state.replace( '\\r', '\r' )
+                res = fres_re.findall( state )
                 results = []
                 counter = 0
                 temp = []
@@ -456,7 +463,7 @@ class flora2:
 
 if __name__ == '__main__':
     x = xsb()
-    x.load('../test/logic/test_xsb')
+    x.load('test/logic/test_xsb')
     print( x.query('dislikes( john, mushrooms )') )
     print( x.query('likes( Person, Food )') )
     del x
@@ -464,19 +471,23 @@ if __name__ == '__main__':
     print( "=======" )
 
     s = swipl()
-    s.load('../test/logic/test_swi')
+    s.load('test/logic/test_swi')
     print ( s.query('dislikes( john, mushrooms )') )
     print ( s.query('likes( Person, Food )') )
     del s
 
+    print( "=======" )
+   
     e = eclipse()
-    e.load('../test/logic/test_eclipse')
+    e.load('test/logic/test_eclipse')
     print ( e.query('dislikes( john, mushrooms )') )
     print ( e.query('likes( Person, Food )') )
     del e
 
+    print( "=======" )
+
     f = flora2()
-    f.load('../test/logic/test_flora')
+    f.load('test/logic/test_flora')
     print ( f.query('john[ dislikes->mushrooms ]') )
     print ( f.query('?person[ likes->?food ]') )
     del f
